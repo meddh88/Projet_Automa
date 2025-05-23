@@ -1,0 +1,82 @@
+@startuml Data Source Center
+
+' Style definitions
+skinparam componentStyle rectangle
+skinparam backgroundColor white
+skinparam stereotypeCBackgroundColor PaleGreen
+skinparam FontName Arial
+
+' Frontend Components
+package "Frontend (React)" {
+    [App.js] as app
+    [App.css] as css
+    component "File Upload Component" as upload
+    component "Data Display Component" as display
+    component "Export Buttons Component" as buttons
+}
+
+' Backend Components
+package "Backend (Flask)" {
+    [server.py] as server
+    [exam_processor.py] as processor
+    [exam_grp_proc.py] as grp_proc
+}
+
+' File System Components
+package "File System" {
+    folder "Exam_GRP_SMUAPP" as smu {
+        folder "Course_Folders" as courses {
+            [Course Files (XLSX)]
+            folder "GRP_separated" as grp {
+                [Group Files (CSV)]
+            }
+        }
+    }
+    
+    folder "Exam_DAY_Smart" as smart {
+        [Day-separated Files]
+    }
+    
+    folder "uploads" as upload_folder {
+        [Temporary Files]
+    }
+}
+
+' Relationships and Data Flow
+app --> upload : uses
+app --> display : uses
+app --> buttons : uses
+buttons --> server : HTTP POST requests
+
+server --> processor : calls
+server --> grp_proc : calls
+processor --> smu : writes
+grp_proc --> smart : writes
+server --> upload_folder : stores temp files
+
+' API Endpoints
+interface "API" as api
+api -- server
+note right of api
+  /api/smu-export
+  /api/smart-scan-export
+  /test
+end note
+
+' File Structure Notes
+note right of smu
+  Structure:
+  Exam_GRP_SMUAPP/
+    Course_Name/
+      course.xlsx
+      Course_Name_GRP_separated/
+        Course_Name_groupeX.csv
+end note
+
+note right of smart
+  Structure:
+  Exam_DAY_Smart/
+    Jour_X.xlsx
+end note
+
+@enduml

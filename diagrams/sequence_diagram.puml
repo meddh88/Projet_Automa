@@ -1,0 +1,80 @@
+@startuml Data Source Center - Sequence Diagram
+
+' Style definitions
+skinparam sequenceMessageAlign center
+skinparam sequenceGroupBorderColor Gray
+skinparam sequenceGroupBackgroundColor WhiteSmoke
+
+' Participants
+actor "Utilisateur" as user
+participant "React Frontend" as frontend
+participant "Flask Server" as server
+participant "SMU Processor" as smu
+participant "Smart Scan Processor" as smart
+database "Filesystem" as fs
+
+' Initial Upload Sequence
+group#LightBlue Upload Fichier
+    user -> frontend : Sélectionne fichier Excel
+    frontend -> frontend : Valide type fichier (.xlsx, .xls, .csv)
+    frontend -> server : POST /api/[endpoint]\nEnvoie fichier
+    server -> fs : Sauvegarde fichier temporaire
+end
+
+' SMU Export Sequence
+group#LightGreen Export SMU
+    user -> frontend : Clic "Export to SMU App"
+    frontend -> server : POST /api/smu-export
+    activate server
+    server -> smu : Traite fichier
+    activate smu
+    
+    smu -> smu : Valide colonnes requises\n(Course Title, GroupEXM,\nStudent ID, Email)
+    
+    smu -> fs : Crée C:/Exam_GRP_SMUAPP
+    
+    loop Pour chaque cours
+        smu -> fs : 1. Crée dossier cours
+        smu -> fs : 2. Sauvegarde fichier cours.xlsx
+        smu -> fs : 3. Crée sous-dossier GRP_separated
+        
+        loop Pour chaque groupe
+            smu -> fs : Crée fichier CSV\n[cours]_groupe[X].csv\n(Student ID, Email, GroupEXM)
+        end
+    end
+    
+    smu --> server : Retourne statut
+    deactivate smu
+    server --> frontend : Retourne résultat
+    deactivate server
+    frontend --> user : Affiche message succès/erreur
+end
+
+' Smart Scan Export Sequence
+group#LightYellow Export Smart Scan
+    user -> frontend : Clic "Export to Smart Scan"
+    frontend -> server : POST /api/smart-scan-export
+    activate server
+    server -> smart : Traite fichier
+    activate smart
+    
+    smart -> smart : Valide colonne DAY
+    smart -> fs : Crée C:/Exam_DAY_Smart
+    
+    loop Pour chaque jour
+        smart -> fs : Crée fichier Jour_[X].xlsx
+    end
+    
+    smart --> server : Retourne statut
+    deactivate smart
+    server --> frontend : Retourne résultat
+    deactivate server
+    frontend --> user : Affiche message succès/erreur
+end
+
+' Cleanup Sequence
+group#Pink Nettoyage
+    server -> fs : Supprime fichier temporaire
+end
+
+@enduml

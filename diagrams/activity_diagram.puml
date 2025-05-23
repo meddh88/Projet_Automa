@@ -1,0 +1,70 @@
+@startuml Data Source Center - Activity Diagram
+
+' Style definitions
+skinparam activity {
+    BackgroundColor LightBlue
+    BorderColor DarkBlue
+    DiamondBackgroundColor LightGray
+    DiamondBorderColor DarkGray
+}
+
+|Frontend|
+start
+:Upload Excel File;
+if (File type valid?) then (yes)
+  :Send to Server;
+else (no)
+  :Show Error;
+  stop
+endif
+
+|Backend|
+:Receive File;
+:Save to Temp Folder;
+
+|User Choice|
+split
+  |SMU Export|
+  :Validate Required Columns
+  (Course Title, GroupEXM,
+  Student ID, Email);
+  if (Columns Valid?) then (yes)
+    :Create Exam_GRP_SMUAPP Directory;
+    :Process Each Course;
+    fork
+      :Create Course Folder;
+    fork again
+      :Save Course Excel File;
+    fork again
+      :Create GRP_separated Folder;
+      :Create Group CSV Files;
+    end fork
+  else (no)
+    :Log Error;
+  endif
+
+else
+  |Smart Scan Export|
+  :Validate DAY Column;
+  if (Column Valid?) then (yes)
+    :Create Exam_DAY_Smart Directory;
+    :Process Each Day;
+    :Create Day-Specific Files;
+  else (no)
+    :Log Error;
+  endif
+end split
+
+|Backend|
+:Delete Temp File;
+
+|Frontend|
+if (Process Successful?) then (yes)
+  :Show Success Message;
+else (no)
+  :Show Error Message;
+endif
+
+stop
+
+@enduml

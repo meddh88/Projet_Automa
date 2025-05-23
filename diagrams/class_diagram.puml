@@ -1,0 +1,88 @@
+@startuml Data Source Center - Class Diagram
+
+' Style definitions
+skinparam class {
+    BackgroundColor LightBlue
+    ArrowColor Black
+    BorderColor DarkBlue
+}
+
+' Classes Frontend
+package "Frontend" {
+    class App {
+        - excelFile: File
+        - excelData: Array
+        - isLoading: boolean
+        - isSMULoading: boolean
+        - isSmartScanLoading: boolean
+        + handleFile()
+        + handleSubmit()
+        + handleSMUExport()
+        + handleSmartScanExport()
+    }
+}
+
+' Classes Backend
+package "Backend" {
+    class FlaskServer {
+        - UPLOAD_FOLDER: string
+        - ALLOWED_EXTENSIONS: set
+        - MAX_CONTENT_LENGTH: int
+        + smu_export()
+        + smart_scan_export()
+        + allowed_file()
+    }
+
+    class ExamProcessor {
+        + separate_exam_by_day(input_file: string)
+        - validate_columns()
+        - process_course()
+        - create_group_files()
+    }
+
+    class SmartScanProcessor {
+        + separate_exam_by_day(input_file: string)
+        - validate_day_column()
+        - create_day_files()
+    }
+}
+
+' Classes Models
+package "Data Models" {
+    class ExcelFile {
+        - filename: string
+        - content: binary
+        - type: string
+    }
+
+    class ProcessedData {
+        - success: boolean
+        - message: string
+        - details: string
+    }
+}
+
+' File System Structure
+package "File System" {
+    class ExamGRPSMUAPP {
+        - root_path: string
+        + create_course_folder()
+        + create_group_files()
+    }
+
+    class ExamDAYSmart {
+        - root_path: string
+        + create_day_files()
+    }
+}
+
+' Relations
+App --> FlaskServer : HTTP Requests
+FlaskServer --> ExamProcessor : uses
+FlaskServer --> SmartScanProcessor : uses
+ExamProcessor --> ExamGRPSMUAPP : writes
+SmartScanProcessor --> ExamDAYSmart : writes
+FlaskServer ..> ExcelFile : processes
+FlaskServer ..> ProcessedData : returns
+
+@enduml
