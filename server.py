@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 import os
 import logging
+import subprocess
 from werkzeug.utils import secure_filename
 from exam_processor import separate_exam_by_day as smu_export_processor
 from exam_grp_proc import separate_exam_by_day as smart_scan_processor
@@ -78,9 +79,16 @@ def smu_export():
             
             if success:
                 logger.info("File processed successfully")
+                # Ouvrir le dossier après succès
+                try:
+                    os.system('explorer "C:\\Exam_GRP_SMUAPP"')
+                except Exception as e:
+                    logger.error(f"Failed to open folder: {str(e)}")
+                
                 return jsonify({
                     'message': message,
-                    'details': 'Files have been created in C:\\Exam_GRP_SMUAPP'
+                    'details': 'Files have been created in C:\\Exam_GRP_SMUAPP',
+                    'openFolder': True
                 })
             else:
                 logger.error(f"Processing failed: {message}")

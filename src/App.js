@@ -158,6 +158,11 @@ function App() {
 
       const data = await response.json();
       alert(data.message);
+      
+      // Si l'export a réussi, ouvrir le dossier
+      if (data.openFolder) {
+        window.open('file:///C:/Exam_GRP_SMUAPP', '_blank');
+      }
 
     } catch (error) {
       console.error('Error during export:', error);
@@ -194,7 +199,7 @@ function App() {
         alert('Please select a valid Excel file (.xls, .xlsx, or .csv)');
         return;
       }
-s
+
       const formData = new FormData();
       formData.append('file', file);
       
@@ -278,7 +283,7 @@ s
                 onClick={() => handleSMUExport()}
                 disabled={isSMULoading}
               >
-                Export to SMU App <span className="export-icon">📱</span>
+                {isSMULoading ? 'Processing...' : 'Export to SMU App'} <span className="export-icon">📱</span>
               </button>
               <button 
                 className={`btn btn-smart-scan ${isSmartScanLoading ? 'loading' : ''}`} 
